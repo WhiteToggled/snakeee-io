@@ -26,6 +26,23 @@ async function setup() {
     app.stage.addChild(world);
 
     world.position.set(app.screen.width / 2, app.screen.height / 2);
+    window.addEventListener("resize", () => {
+        world.position.set(app.screen.width / 2, app.screen.height / 2);
+    });
+
+    // Disable Zoom
+    window.addEventListener("wheel", (e) => {
+        if (e.ctrlKey) {
+            e.preventDefault();
+        }
+    }, { passive: false });
+    window.addEventListener("keydown", (e) => {
+        if (e.ctrlKey &&
+            (e.key === '+' || e.key === '-' || e.key === '=')) {
+            e.preventDefault();
+        }
+    });
+
     world.pivot.copyFrom(player.position);
 
     app.ticker.add(() => {
