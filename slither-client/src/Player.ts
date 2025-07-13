@@ -1,18 +1,21 @@
 import { Graphics, Point } from "pixi.js";
-import { mousePos } from "./Input.ts";
+import { WORLD_RADIUS } from "./World";
 
-export const PLAYER_RADIUS = 20;
-export const PLAYER_SPEED = 5;
-export const DEADZONE = 1;
+const PLAYER_RADIUS = 20;
+const PLAYER_SPEED = 5;
+const DEADZONE = 1;
 
-export function createPlayer(): Graphics {
-    const player = new Graphics().circle(0, 0, PLAYER_RADIUS).fill("white");
-    return player;
-}
+export class Player {
+    public sprite: Graphics;
 
-export function updatePlayer(appCenter: Point, player: Graphics) {
-    // For singleplayer testing
-    if (document.hasFocus()) {
+    constructor() {
+        this.sprite = new Graphics().circle(0, 0, PLAYER_RADIUS).fill("white");
+    }
+
+    public update(mousePos: Point, appCenter: Point) {
+        // For singleplayer testing
+        if (!document.hasFocus()) return;
+
         const dx = mousePos.x - appCenter.x;
         const dy = mousePos.y - appCenter.y;
         const len = Math.sqrt(dx * dx + dy * dy);
@@ -21,24 +24,17 @@ export function updatePlayer(appCenter: Point, player: Graphics) {
             const nx = dx / len;
             const ny = dy / len;
 
-            player.x += nx * PLAYER_SPEED;
-            player.y += ny * PLAYER_SPEED;
+            this.sprite.x += nx * PLAYER_SPEED;
+            this.sprite.y += ny * PLAYER_SPEED;
+
+            // World Bounding
+            const r = Math.sqrt(this.sprite.x  ** 2 + this.sprite.y ** 2);
+            const limit = WORLD_RADIUS - PLAYER_RADIUS;
+            if (r > limit) {
+                const ratio = limit / r;
+                this.sprite.x *= ratio;
+                this.sprite.y *= ratio;
+            }
         }
     }
 }
-
-// Keyboard inputs
-// export function updatePlayer(
-//     input: {
-//         up: boolean;
-//         down: boolean;
-//         left: boolean;
-//         right: boolean;
-//     },
-//     player: Graphics,
-// ) {
-//     if (input.up) player.y -= PLAYER_SPEED;
-//     if (input.down) player.y += PLAYER_SPEED;
-//     if (input.left) player.x -= PLAYER_SPEED;
-//     if (input.right) player.x += PLAYER_SPEED;
-// }
