@@ -2,7 +2,7 @@ import { Graphics, Point } from "pixi.js";
 import { WORLD_RADIUS } from "./World";
 
 const PLAYER_RADIUS = 20;
-const PLAYER_SPEED = 5;
+const PLAYER_SPEED = 10;
 const DEADZONE = 1;
 
 export class Player {
@@ -24,8 +24,15 @@ export class Player {
             const nx = dx / len;
             const ny = dy / len;
 
-            this.sprite.x += nx * PLAYER_SPEED;
-            this.sprite.y += ny * PLAYER_SPEED;
+            // lerp
+            const targetX = this.sprite.x + nx * PLAYER_SPEED;
+            const targetY = this.sprite.y + ny * PLAYER_SPEED;
+
+            // ideally use time based smoothing factor
+            // this is good enough for now
+            const SMOOTHING = 0.6; 
+            this.sprite.x += (targetX - this.sprite.x) * SMOOTHING;
+            this.sprite.y += (targetY - this.sprite.y) * SMOOTHING;
 
             // World Bounding
             const r = Math.sqrt(this.sprite.x  ** 2 + this.sprite.y ** 2);
