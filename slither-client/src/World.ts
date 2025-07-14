@@ -1,5 +1,6 @@
 import { Container, Graphics, Point } from "pixi.js";
 import { Orb } from "./Orb";
+import { Player } from "./Player";
 
 export const WORLD_RADIUS = 2000;
 const N_ORBS = 250;
@@ -37,14 +38,37 @@ export class World {
         this.container.position.copyFrom(center);
     }
 
-    public addEntity(et: Graphics) {
+    public add(et: Graphics) {
         this.container.addChild(et);
     }
 
-    public update(pivot: Point, delta: number) {
-        this.container.pivot.copyFrom(pivot);
+    private checkCollision(orb: Orb, playerPos: Point, playerRadius: number): boolean {
+        const dx = orb.x - playerPos.x;
+        const dy = orb.y - playerPos.y;
+        const distSq = dx*dx + dy*dy;
+
+        const minDist = playerRadius + orb.getRadius();
+        if (distSq <= (minDist*minDist)) {
+            // console.log(`Orb: (${orb.x}, ${orb.y}), (${playerPos.x}, ${playerPos.y})`);
+            return true;
+        }
+        return false;
+    }
+
+    public update(player: Player, delta: number, onScoreUpdate?: (score: number) => void) {
+        this.container.pivot.copyFrom(player.position);
         for (const orb of this.orbs) {
             orb.update(delta);
         }
+
+        this.orbs = this.orbs.filter((orb) => {
+            const collided = this.checkCollision(orb, player.position, player.radius);
+            if (collided) {
+                this.container.removeChild(orb);
+                player.updateScore();
+                if (onScoreUpdate) onScoreUpdate(player.score);
+            }
+            return !collided;
+        });
     }
 }

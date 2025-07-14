@@ -1,11 +1,18 @@
 import { Graphics } from "pixi.js";
 
 export class Orb extends Graphics {
+    private radius: number;
     // private time = Math.random() * Math.PI * 2;
 
     constructor(x: number, y: number, radius: number, color = 0x44aaff) {
         super();
-        this.circle(x, y, radius). fill(color);
+        this.radius = radius;
+        this.circle(0, 0, radius).fill(color);
+        this.position.set(x, y);
+    }
+
+    public getRadius(): number {
+        return this.radius;
     }
 
     public update(delta: number) {

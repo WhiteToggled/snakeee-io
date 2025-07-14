@@ -7,9 +7,26 @@ const DEADZONE = 1;
 
 export class Player {
     public sprite: Graphics;
+    public score: number = 0;
 
     constructor() {
-        this.sprite = new Graphics().circle(0, 0, PLAYER_RADIUS).fill("white");
+        this.sprite = new Graphics()
+            .circle(0, 0, PLAYER_RADIUS)
+            .fill("white");
+    }
+    
+    public get position() : Point {
+        return this.sprite.position;
+    }
+    
+    public get radius() : number {
+        return PLAYER_RADIUS;
+    }
+
+    public updateScore(amount: number = 1) {
+        this.score += amount;
+
+        console.log(`Score: ${this.score}`);
     }
 
     public update(mousePos: Point, appCenter: Point) {
