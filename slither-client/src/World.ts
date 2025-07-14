@@ -41,7 +41,10 @@ export class World {
         this.container.addChild(et);
     }
 
-    public update(pivot: Point) {
+    public update(pivot: Point, delta: number) {
         this.container.pivot.copyFrom(pivot);
+        for (const orb of this.orbs) {
+            orb.update(delta);
+        }
     }
 }

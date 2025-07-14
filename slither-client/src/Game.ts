@@ -40,15 +40,15 @@ export class Game {
             this.world.setPosition(this.screenCenter);
         });
 
-        this.app.ticker.add(() => this.render());
+        this.app.ticker.add((delta) => this.render(delta.deltaTime));
     }
     
     private updateScreenCenter() {
         this.screenCenter.set(this.app.screen.width / 2, this.app.screen.height / 2);
     }
 
-    private render() {
+    private render(delta: number) {
         this.player.update(this.input.mousePos, this.screenCenter);
-        this.world.update(this.player.sprite.position);
+        this.world.update(this.player.sprite.position, delta);
     }
 }
