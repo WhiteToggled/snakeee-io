@@ -27,7 +27,7 @@ export class World {
             const x = Math.cos(angle) * radius;
             const y = Math.sin(angle) * radius;
 
-            const orb = new Orb(x, y, Math.floor(Math.random() * 10) + 1);
+            const orb = new Orb(x, y, Math.floor(Math.random() * 6) + 6);
             this.orbs.push(orb);
             this.container.addChild(orb);
         }
@@ -61,11 +61,17 @@ export class World {
             orb.update(delta);
         }
 
+        // Orb Collision Logic
         this.orbs = this.orbs.filter((orb) => {
+            if (!orb.active) return;
             const collided = this.checkCollision(orb, player.position, player.radius);
             if (collided) {
-                this.container.removeChild(orb);
-                player.updateScore();
+                // Just flag the orbs instead of deleting
+                // this.container.removeChild(orb);
+                orb.active = false;
+                orb.visible = false;
+
+                player.updateScore(Math.floor(orb.getRadius() / 2));
                 if (onScoreUpdate) onScoreUpdate(player.score);
             }
             return !collided;

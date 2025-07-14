@@ -2,6 +2,7 @@ import { Graphics } from "pixi.js";
 
 export class Orb extends Graphics {
     private radius: number;
+    public active: boolean = true;
     // private time = Math.random() * Math.PI * 2;
 
     constructor(x: number, y: number, radius: number, color = 0x44aaff) {
