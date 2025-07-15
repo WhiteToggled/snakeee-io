@@ -16,22 +16,20 @@ export class World {
         this.background = new Graphics().circle(0, 0, WORLD_RADIUS).fill(0x161c22);
         this.container.addChild(this.background);
 
-        this.spawnOrbs(N_ORBS);
+        for (let i = 0; i < N_ORBS; ++i)
+            this.spawnOrb();
     }
 
-    private spawnOrbs(nOrbs: number) {
-        for (let i = 0; i < nOrbs; ++i) {
-            const angle = Math.random() * Math.PI * 2;
-            const radius = Math.random() * (WORLD_RADIUS - 10);
+    private spawnOrb() {
+        const angle = Math.random() * Math.PI * 2;
+        const radius = Math.random() * (WORLD_RADIUS - 10);
 
-            const x = Math.cos(angle) * radius;
-            const y = Math.sin(angle) * radius;
+        const x = Math.cos(angle) * radius;
+        const y = Math.sin(angle) * radius;
 
-            const orb = new Orb(x, y, Math.floor(Math.random() * 6) + 6);
-            this.orbs.push(orb);
-            this.container.addChild(orb);
-        }
-
+        const orb = new Orb(x, y, Math.floor(Math.random() * 6) + 6);
+        this.orbs.push(orb);
+        this.container.addChild(orb);
     }
 
     public setPosition(center: Point) {
@@ -57,24 +55,17 @@ export class World {
 
     public update(player: Player, delta: number, onScoreUpdate?: (score: number) => void) {
         this.container.pivot.copyFrom(player.position);
+
         for (const orb of this.orbs) {
             orb.update(delta);
-        }
-
-        // Orb Collision Logic
-        this.orbs = this.orbs.filter((orb) => {
-            if (!orb.active) return;
+            
             const collided = this.checkCollision(orb, player.position, player.radius);
-            if (collided) {
+            if (orb.active && collided) {
                 // Just flag the orbs instead of deleting
-                // this.container.removeChild(orb);
-                orb.active = false;
-                orb.visible = false;
-
+                orb.kill();
                 player.updateScore(Math.floor(orb.getRadius() / 2));
-                if (onScoreUpdate) onScoreUpdate(player.score);
+                onScoreUpdate?.(player.score);
             }
-            return !collided;
-        });
+        }
     }
 }
