@@ -56,12 +56,14 @@ export class Game {
     }
 
     private update(delta: number) {
-        this.player.update(this.input.mousePos, this.screenCenter);
-        this.world.update(this.player, delta, (score: number) => {
-            if (score !== this.lastScore) {
-                this.lastScore = score;
-                this.overlay.setScore(score);
-            }
-        });
+        this.player.update(this.input, this.input.mousePos, this.screenCenter, delta);
+
+        this.world.update(this.player, delta);
+
+        const currentScore = Math.floor(this.player.score);
+        if (currentScore !== this.lastScore) {
+            this.lastScore = currentScore;
+            this.overlay.setScore(currentScore);
+        }
     }
 }

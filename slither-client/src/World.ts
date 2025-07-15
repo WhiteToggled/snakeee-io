@@ -53,7 +53,7 @@ export class World {
         return false;
     }
 
-    public update(player: Player, delta: number, onScoreUpdate?: (score: number) => void) {
+    public update(player: Player, delta: number) {
         this.container.pivot.copyFrom(player.position);
 
         for (const orb of this.orbs) {
@@ -64,7 +64,6 @@ export class World {
                 // Just flag the orbs instead of deleting
                 orb.kill();
                 player.updateScore(Math.floor(orb.getRadius() / 2));
-                onScoreUpdate?.(player.score);
             }
         }
     }
