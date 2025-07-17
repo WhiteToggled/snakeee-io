@@ -36,7 +36,7 @@ export class World {
         this.container.position.copyFrom(center);
     }
 
-    public add(et: Graphics) {
+    public add(et: Container) {
         this.container.addChild(et);
     }
 
