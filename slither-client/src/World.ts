@@ -1,6 +1,6 @@
 import { Container, Graphics, Point } from "pixi.js";
 import { Orb } from "./Orb";
-import { Player } from "./Player";
+import { Player, BASE_RADIUS } from "./Player";
 
 export const WORLD_RADIUS = 2000;
 const N_ORBS = 250;
@@ -54,7 +54,12 @@ export class World {
     }
 
     public update(player: Player, delta: number) {
+        const SMOOTHING = 1 - Math.exp(- delta * 5);
         this.container.pivot.copyFrom(player.position);
+
+        const zoomFactor = Math.max(0.4, Math.min(1 / (1 + (player.radius - BASE_RADIUS) / 70),));
+        this.container.scale.x += (zoomFactor - this.container.scale.x) * SMOOTHING;
+        this.container.scale.y += (zoomFactor - this.container.scale.y) * SMOOTHING;
 
         for (const orb of this.orbs) {
             orb.update(delta);

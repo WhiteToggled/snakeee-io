@@ -8,8 +8,8 @@ const PLAYER_SPEED = 5;
 const BOOST_DRAIN = 5;
 const MIN_SCORE = 10;
 
-const BASE_RADIUS = 20;
-const SCALE_FACTOR = 0.005;
+export const BASE_RADIUS = 20;
+const SCALE_FACTOR = 0.02;
 
 const BASE_LENGTH = 6;
 const SEGMENT_SPACING = 10;
