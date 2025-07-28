@@ -30,6 +30,7 @@ export class Game {
         globalThis.__PIXI_APP__ = this.app;
 
         this.world = new World();
+        await this.world.init();
         this.app.stage.addChild(this.world.container);
 
         this.overlay = new Overlay();
@@ -56,7 +57,7 @@ export class Game {
     }
 
     private update(delta: number) {
-        this.player.update(this.input, this.input.mousePos, this.screenCenter, delta);
+        this.player.update(this.world.getOrbPool(), this.input, this.input.mousePos, this.screenCenter, delta);
 
         this.world.update(this.player, delta);
 
