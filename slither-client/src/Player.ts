@@ -1,5 +1,6 @@
 import { Graphics, Container, Point } from "pixi.js";
 import { Input } from "./Input";
+import { OrbPool } from "./OrbPool";
 import { WORLD_RADIUS } from "./World";
 
 const DEADZONE = 1;
@@ -40,6 +41,30 @@ export class Player {
     public get radius(): number {
         return BASE_RADIUS * this.scale;
     }
+
+    public die(orbPool: OrbPool) {
+        const dropCount = Math.floor(this.score / 8);
+
+        for (let i = 0; i < dropCount; ++i) {
+            const t = i / dropCount;
+            const index = Math.floor(t * (this.segmentPositions.length - 1));
+            const pos = this.segmentPositions[index];
+
+            const jitterX = (Math.random() - 0.5) * 10;
+            const jitterY = (Math.random() - 0.5) * 10;
+
+            orbPool.spawnOrb(pos.x + jitterX, pos.y + jitterY);
+        }
+
+        this.sprite.position.set(0, 0);
+        for (let i = 0; i < this.segmentPositions.length; ++i) {
+            this.segmentPositions[i].set(0, 0);
+        }
+
+        console.log(`Player died with score ${Math.floor(this.score)}`);
+        this.score = MIN_SCORE;
+        this.updateScore(0); // resets size and segments
+    }
     
     public updateScore(amount: number = 1) {
         this.score = Math.max(MIN_SCORE, this.score + amount);
@@ -68,15 +93,6 @@ export class Player {
 
         this.sprite.x += (targetX - this.sprite.x) * smoothing;
         this.sprite.y += (targetY - this.sprite.y) * smoothing;
-
-        // World Bounding
-        const r = Math.sqrt(this.sprite.x ** 2 + this.sprite.y ** 2);
-        const limit = WORLD_RADIUS - this.radius;
-        if (r > limit) {
-            const ratio = limit / r;
-            this.sprite.x *= ratio;
-            this.sprite.y *= ratio;
-        }
     }
     
     private addSegment() {
@@ -92,7 +108,7 @@ export class Player {
         this.sprite.addChild(seg);
     }
 
-    public update(inputs: Input, mousePos: Point, appCenter: Point, delta: number) {
+    public update(orbPool: OrbPool, inputs: Input, mousePos: Point, appCenter: Point, delta: number) {
         // For singleplayer testing
         if (!document.hasFocus()) return;
 
@@ -108,15 +124,14 @@ export class Player {
             this.move(n, speed, SMOOTHING);
         }
 
-        this.isBoosting = inputs.mouseDown && this.score > MIN_SCORE;
-        if (this.isBoosting) {
-            const drain = -(BOOST_DRAIN * delta) / 60;
-            this.updateScore(drain);
-            if (this.score === MIN_SCORE) this.isBoosting = false;
-        }
-
         // Updates head position
         this.segmentPositions[0] = this.sprite.position.clone();
+
+        const distToCenter = Math.hypot(this.sprite.x, this.sprite.y);
+        if (distToCenter - this.radius > WORLD_RADIUS) {
+            this.die(orbPool);
+            return;
+        }
 
         for (let i = 1; i < this.segmentPositions.length; ++i) {
             const prev = this.segmentPositions[i - 1];
@@ -141,6 +156,13 @@ export class Player {
                     follow.y - this.sprite.y
                 );
             }
+        }
+
+        this.isBoosting = inputs.mouseDown && this.score > MIN_SCORE;
+        if (this.isBoosting) {
+            const drain = -(BOOST_DRAIN * delta) / 60;
+            this.updateScore(drain);
+            if (this.score === MIN_SCORE) this.isBoosting = false;
         }
     }
 }
