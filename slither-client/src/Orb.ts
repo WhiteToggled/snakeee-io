@@ -1,5 +1,4 @@
 import { Graphics } from "pixi.js";
-import { WORLD_RADIUS } from "./World";
 
 export class Orb extends Graphics {
     private radius: number;
