@@ -1,15 +1,13 @@
-interface Point {
-    x: number;
-    y: number;
-}
-
 export interface PlayerState {
     id: string; // unique player ID
-    position: Point; // head position
-    direction: Point; // movement vector (normalized)
-    radius: number; // scaled by score
+    position: { x: number; y: number }; // head position
+    direction: { x: number; y: number }; // movement vector (normalized)
+    radius: number;
+    scale: number;
     score: number;
-    segments: Point[]; // positions of body segments
+    color: number;
     isBoosting: boolean;
     alive: boolean;
+    segmentPositions: { x: number; y: number }[]; // positions of body segments
+    respawnTimer?: number;
 }
