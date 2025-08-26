@@ -7,6 +7,9 @@ const game = new Game(app);
 (async () => {
     await preload();
     await game.start("pixi-container");
+
+    // Server connection
+    await game.connect("ws://localhost:8080");
 })();
 
 async function preload() {

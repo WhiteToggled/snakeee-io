@@ -41,6 +41,8 @@ export class OrbPool {
             orb.setRadius(state.radius);
             orb.active = state.active;
             orb.visible = state.active;
+            orb.clear();
+            orb.circle(0, 0, 5).fill(state.color);
         }
     }
 

@@ -18,7 +18,7 @@ export class Overlay {
     }
 
     public setScore(score: number) {
-        this.scoreText.text = `Score: ${score}`;
+        this.scoreText.text = `Score: ${Math.floor(score)}`;
     }
 
     public resize(screenWidth: number, screenHeight: number) {

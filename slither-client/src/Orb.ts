@@ -4,10 +4,10 @@ export class Orb extends Graphics {
     private radius: number;
     public active: boolean = true;
 
-    constructor(x: number, y: number, radius: number, color = 0x44aaff) {
+    constructor(x: number, y: number, radius: number) {
         super();
         this.radius = radius;
-        this.circle(0, 0, radius).fill(color);
+        this.circle(0, 0, radius).fill(0xff00ff);
         this.position.set(x, y);
     }
 
