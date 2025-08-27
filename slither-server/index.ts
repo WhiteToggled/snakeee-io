@@ -10,11 +10,9 @@ async function main() {
     const httpServer = createServer(app);
 
     const clientDist = path.resolve(__dirname, "../../../slither-client/dist");
-    console.log("Serving client from:", clientDist);
-
     app.use("/", express.static(clientDist));
+    // console.log("Serving client from:", clientDist);
 
-    // pass the HTTP server into GameServer
     new GameServer(httpServer);
 
     httpServer.listen(PORT, () => {
