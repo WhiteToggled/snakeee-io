@@ -24,7 +24,7 @@ export class Player {
         this.id = id;
         this.color = Math.floor(Math.random() * 0xffffff);
 
-        this.segmentPositions.push({ x: 0, y: 0 });
+        this.segmentPositions.push(this.getRandomSpawn());
         for (let i = 0; i < constants.BASE_LENGTH; ++i) {
             this.addSegment();
         }
@@ -114,7 +114,7 @@ export class Player {
 
     private tryRespawn(delta: number) {
         if (!this.alive && this.respawnTimer !== undefined) {
-            this.respawnTimer -= delta / 60; // assuming delta ~ frames
+            this.respawnTimer -= delta / 40;
             if (this.respawnTimer <= 0) {
                 this.alive = true;
                 this.respawnTimer = undefined;
