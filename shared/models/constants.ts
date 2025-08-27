@@ -19,4 +19,4 @@ export const INITIAL_ACTIVE_ORBS = 250;
 export const INIT_CHUNK_SIZE = 100;
 export const INIT_DELAY_MS = 10;
 
-export const TICK_RATE = 20;
+export const TICK_RATE = 40;
