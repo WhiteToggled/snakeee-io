@@ -9,7 +9,10 @@ const game = new Game(app);
     await game.start("pixi-container");
 
     // Server connection
-    await game.connect("ws://localhost:8080");
+    const protocol = window.location.protocol === "https:" ? "wss" : "ws";
+    const host = window.location.host; // includes port if non-standard
+    const wsUrl = `${protocol}://${host}`;
+    await game.connect(wsUrl);
 })();
 
 async function preload() {
