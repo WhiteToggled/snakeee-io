@@ -1,0 +1,22 @@
+{
+  "name": "snakeee-io",
+  "version": "1.0.0",
+  "description": "A multiplayer io game",
+  "homepage": "https://github.com/WhiteToggled/slither-io#readme",
+  "bugs": {
+    "url": "https://github.com/WhiteToggled/slither-io/issues"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/WhiteToggled/slither-io.git"
+  },
+  "license": "ISC",
+  "author": "",
+  "type": "commonjs",
+  "main": "index.js",
+  "scripts": {
+    "clean": "rm -rf slither-client/dist/ && rm -rf slither-server/dist/",
+    "build": "cd slither-client && npm install && npm run build && cd ../slither-server && npm install && tsc",
+    "start": "cd slither-server && node dist/slither-server/index.js"
+  }
+}

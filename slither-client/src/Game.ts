@@ -30,7 +30,9 @@ export class Game {
             throw new Error("Cannot initialize game. Container not found");
         container.appendChild(this.app.canvas);
 
-        globalThis.__PIXI_APP__ = this.app; // Debug only
+        if (import.meta.env.DEV) {
+            (globalThis as any).__PIXI_APP__ = this.app; // Debug only
+        }
 
         this.world = new World();
         await this.world.init();

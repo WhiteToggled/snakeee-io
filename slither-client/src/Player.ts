@@ -23,6 +23,10 @@ export class Player {
         return this.sprite.position;
     }
 
+    public getId(): string {
+        return this.id;
+    }
+
 
     public updateFromServer(state: PlayerState) {
         // Apply server position and scale
