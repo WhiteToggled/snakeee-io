@@ -145,17 +145,8 @@ export class Game {
         if (!this.socket || this.socket.readyState !== WebSocket.OPEN) return;
         if (!this.myId) return;
 
-        const me = this.players.get(this.myId);
-        if (!me) return;
-
-        const dx = input.mousePos.x - this.app.renderer.width / 2;
-        const dy = input.mousePos.y - this.app.renderer.height / 2;
-        const len = Math.sqrt(dx * dx + dy * dy);
-
-        const dir = len > 0 ? { x: dx / len, y: dy / len } : { x: 0, y: 0 };
-
         const msg: InputMessage = {
-            mousePos: dir,
+            mousePos: { x: input.dir.x, y: input.dir.y },
             mouseDown: input.mouseDown,
         };
 
