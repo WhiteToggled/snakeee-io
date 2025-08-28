@@ -29,8 +29,8 @@ export class World {
             for (const orb of this.orbManager.getActiveOrbs()) {
                 if (!orb.active) continue;
 
-                const dx = orb.x - player.state.position.x;
-                const dy = orb.y - player.state.position.y;
+                const dx = orb.coords[0] - player.state.position[0];
+                const dy = orb.coords[1] - player.state.position[1];
                 const distSq = dx * dx + dy * dy;
                 const r = orb.radius + player.radius;
 
@@ -55,10 +55,10 @@ export class World {
 
                 // Check collision against each body segment of b
                 // for (const seg of b.state.segmentPositions) {
-                for (let i = 1; i < b.state.segmentPositions.length; ++i) {
-                    const seg = b.state.segmentPositions[i];
-                    const dx = seg.x - a.state.position.x;
-                    const dy = seg.y - a.state.position.y;
+                for (let i = 1; i < b.segmentPositions.length; ++i) {
+                    const seg = b.segmentPositions[i];
+                    const dx = seg.x - a.state.position[0];
+                    const dy = seg.y - a.state.position[1];
                     const distSq = dx * dx + dy * dy;
                     const r = a.radius;
 

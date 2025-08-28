@@ -1,8 +1,8 @@
 import { WebSocketServer, WebSocket } from "ws";
 import { v4 as uuidv4 } from "uuid";
 import { Server } from "http";
-import { MongoClient } from "mongodb";
-// import zlib from "zlib";
+// import { MongoClient } from "mongodb";
+import zlib from "zlib";
 
 import { World } from "./World";
 import { Player } from "./Player";
@@ -10,11 +10,12 @@ import * as constants from "../../shared/models/constants";
 
 import { InputMessage, ServerToClientMessage, } from "../../shared/types/messages";
 import { PlayerState } from "../../shared/models/player_state";
-import { WorldState } from "../../shared/models/world_state";
+import { OrbState } from "../../shared/models/orb_state";
+// import { WorldState } from "../../shared/models/world_state";
 
 // local dotenv file
-import dotenv from "dotenv";
-dotenv.config();
+// import dotenv from "dotenv";
+// dotenv.config();
 
 interface PlayerMeta {
     ip: string;
@@ -28,8 +29,8 @@ export class GameServer {
     private sockets: Record<string, WebSocket> = {};
     private playerMeta: Record<string, PlayerMeta> = {};
 
-    private client: MongoClient;
-    private logs: any;
+    // private client: MongoClient;
+    // private logs: any;
 
     private tickInterval: NodeJS.Timeout;
 
@@ -47,17 +48,31 @@ export class GameServer {
             },
         });
         this.world = new World();
+        setInterval(() => {
+            console.log(
+                `[Traffic] Last minute - Uncompressed: ${this.totalUncompressedBytes} bytes, Compressed (deflateRaw): ${this.totalCompressedBytes} bytes`
+            );
+            this.totalUncompressedBytes = 0;
+            this.totalCompressedBytes = 0;
+        }, 60_000);
 
         // MongoDB for Logs
-        const uri = process.env.MONGO_URI!;
-        this.client = new MongoClient(uri);
+        // const uri = process.env.MONGO_URI!;
+        // this.client = new MongoClient(uri);
+        //
+        // this.client.connect().then(() => {
+        //     const db = this.client.db("slither");
+        //     this.logs = db.collection("player_logs");
+        //     console.log("Connected to MongoDB Atlas");
+        // }).catch(console.error);
 
-        this.client.connect().then(() => {
-            const db = this.client.db("slither");
-            this.logs = db.collection("player_logs");
-            console.log("Connected to MongoDB Atlas");
-        }).catch(console.error);
+        this.world.getOrbManager().on("orb_spawn", (orb: OrbState) => {
+            this.broadcast({ type: "orb_spawn", orb });
+        });
 
+        this.world.getOrbManager().on("orb_despawn", (orb: OrbState) => {
+            this.broadcast({ type: "orb_despawn", orbId: orb.id });
+        });
         this.wss.on("connection", (ws: WebSocket, req) => this.handleConnection(ws, req));
 
         // Start game loop
@@ -67,16 +82,16 @@ export class GameServer {
         console.log("GameServer initialized");
     }
 
-    private async logPlayerEvent(id: string, event: string, ip: string, userAgent: string) {
-        if (!this.logs) return;
-        await this.logs.insertOne({
-            id,
-            event,
-            ip,
-            userAgent,
-            timestamp: new Date(),
-        });
-    }
+    // private async logPlayerEvent(id: string, event: string, ip: string, userAgent: string) {
+    //     if (!this.logs) return;
+    //     await this.logs.insertOne({
+    //         id,
+    //         event,
+    //         ip,
+    //         userAgent,
+    //         timestamp: new Date(),
+    //     });
+    // }
 
     private handleConnection(ws: WebSocket, req: any) {
         // console.log("Client offered extensions:", req.headers["sec-websocket-extensions"]);
@@ -93,13 +108,15 @@ export class GameServer {
         this.playerMeta[id] = { ip, userAgent };
 
         // logging
-        this.logPlayerEvent(id, "connect", ip, userAgent);
+        // this.logPlayerEvent(id, "connect", ip, userAgent);
 
         console.log(`Player ${id} connected from ${ip}, ${userAgent}`);
 
         // Tell client their ID
         const initMsg: ServerToClientMessage = { type: "init", playerId: id };
         ws.send(JSON.stringify(initMsg));
+        const orbMsg: ServerToClientMessage = { type: "orb_batch_spawn", orbs: this.world.getOrbManager().getActiveOrbs() };
+        ws.send(JSON.stringify(orbMsg));
 
         // Notify others
         const joinMsg: ServerToClientMessage = {
@@ -118,7 +135,7 @@ export class GameServer {
 
         try {
             const msg: InputMessage = JSON.parse(raw);
-            player.setInput(msg.mousePos, msg.mouseDown);
+            player.setInput(msg.dir, msg.mouseDown);
         } catch (err) {
             console.error("Invalid message from client", err);
         }
@@ -128,7 +145,7 @@ export class GameServer {
         const meta = this.playerMeta[id];
         // logging
         if (meta) {
-            this.logPlayerEvent(id, "disconnect", meta.ip, meta.userAgent);
+            // this.logPlayerEvent(id, "disconnect", meta.ip, meta.userAgent);
             console.log(`Player ${id} disconnected from ${meta.ip} (${meta.userAgent})`);
         }
 
@@ -158,29 +175,31 @@ export class GameServer {
     }
 
     private broadcastWorldState() {
-        const state: WorldState = {
-            players: this.getPlayerStates(),
-            orbs: this.world.getOrbManager().getActiveOrbs(),
-        };
+        const p = this.getPlayerStates();
 
-        const msg: ServerToClientMessage = { type: "world_update", state };
+        const msg: ServerToClientMessage = { type: "world_update", players: p };
         this.broadcast(msg);
     }
 
+    private totalUncompressedBytes = 0;
+    private totalCompressedBytes = 0;
     private broadcast(msg: ServerToClientMessage, excludeId?: string) {
-        // const raw = JSON.stringify(msg);
-        // const buf = Buffer.from(raw);
-        // console.log("Uncompressed:", buf.length);
-        //
-        // zlib.deflateRaw(buf, (err, compressed) => {
-        //     if (!err) {
-        //         console.log("Compressed size estimate:", compressed.length);
-        //     }
-        // });
+        const raw = JSON.stringify(msg);
+        const buf = Buffer.from(raw);
+        this.totalUncompressedBytes += buf.length;
+
+        zlib.deflateRaw(buf, (err, compressed) => {
+            if (!err && compressed) {
+                this.totalCompressedBytes += compressed.length;
+            }
+        });
 
         const payload = JSON.stringify(msg);
         for (const [id, socket] of Object.entries(this.sockets)) {
             if (excludeId && id === excludeId) continue;
+            if (msg.type == "orb_spawn") {
+                console.log("Sending orb_spawn to", id);
+            }
             if (socket.readyState === WebSocket.OPEN) {
                 socket.send(payload);
             }

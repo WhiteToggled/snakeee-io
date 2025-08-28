@@ -101,7 +101,7 @@ describe("GameServer", () => {
         )[1];
 
         const player = (server as any).players["mock-player-id"];
-        msgHandler(JSON.stringify({ mousePos: { x: 10, y: 20 }, mouseDown: true }));
+        msgHandler(JSON.stringify({ dir: { x: 10, y: 20 }, mouseDown: true }));
 
         expect(player.setInput).toHaveBeenCalledWith({ x: 10, y: 20 }, true);
     });

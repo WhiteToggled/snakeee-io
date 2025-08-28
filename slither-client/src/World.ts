@@ -1,6 +1,6 @@
 import { Container, Graphics, Point } from "pixi.js";
 import { OrbPool } from "./OrbPool";
-import { WorldState } from "../../shared/models/world_state";
+import { OrbState } from "../../shared/models/orb_state";
 import { WORLD_RADIUS } from "../../shared/models/constants";
 
 export class World {
@@ -15,10 +15,6 @@ export class World {
         this.container.addChild(this.background);
 
         this.orbPool = new OrbPool();
-    }
-
-    public async init() {
-        await this.orbPool.initializeAsync();
         this.container.addChild(this.orbPool.getContainer());
     }
 
@@ -26,11 +22,20 @@ export class World {
         this.container.position.copyFrom(center);
     }
 
-    public add(et: Container) {
-        this.container.addChild(et);
+    public add(child: Container) {
+        this.container.addChild(child);
     }
 
-    public updateFromServer(state: WorldState) {
-        this.orbPool.updateFromServer(state.orbs);
+    public spawnBatchOrbs(orbStates: OrbState[]) {
+        this.orbPool.spawnOrbsBatchAsync(orbStates);
+    }
+
+    public spawnOrb(orb: OrbState) {
+        this.orbPool.spawnOrb(orb);
+    }
+
+    public despawnOrb(id: number) {
+        this.orbPool.despawnOrb(id);
     }
 }
+

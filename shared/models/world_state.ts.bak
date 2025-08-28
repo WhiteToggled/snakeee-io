@@ -5,3 +5,5 @@ export interface WorldState {
     players: Record<string, PlayerState>; // string key is the playerID
     orbs: OrbState[];
 }
+
+// deprecated

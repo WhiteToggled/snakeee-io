@@ -9,7 +9,7 @@ export class Player {
 
     private position: { x: number; y: number } = { x: 0, y: 0 };
     private direction: { x: number; y: number } = { x: 1, y: 0 };
-    private segmentPositions: { x: number; y: number }[] = [];
+    public segmentPositions: { x: number; y: number }[] = [];
 
     public scale: number = 1;
     public color: number;
@@ -18,7 +18,7 @@ export class Player {
     public alive: boolean = true;
     private respawnTimer?: number;
 
-    private input: InputMessage = { mousePos: { x: 0, y: 0 }, mouseDown: false };
+    private input: InputMessage = { dir: { x: 0, y: 0 }, mouseDown: false };
 
     constructor(id: string) {
         this.id = id;
@@ -37,21 +37,21 @@ export class Player {
     public get state(): PlayerState {
         return {
             id: this.id,
-            position: { ...this.position },
-            direction: { ...this.direction },
+            position: [this.position.x, this.position.y],
+            segmentCount: this.segmentPositions.length,
             radius: this.radius,
             scale: this.scale,
             score: this.score,
             color: this.color,
-            isBoosting: this.isBoosting,
             alive: this.alive,
-            segmentPositions: this.segmentPositions.map((p) => ({ x: p.x, y: p.y })),
-            respawnTimer: this.respawnTimer,
         };
+            // isBoosting: this.isBoosting,
+            // segmentPositions: this.segmentPositions.map((p) => ({ x: p.x, y: p.y })),
+            // respawnTimer: this.respawnTimer,
     }
 
-    public setInput(mousePos: { x: number; y: number }, mouseDown: boolean) {
-        this.input = { mousePos, mouseDown };
+    public setInput(dir: { x: number; y: number }, mouseDown: boolean) {
+        this.input = { dir, mouseDown };
     }
 
     public updateScore(amount: number = 1) {
@@ -90,6 +90,7 @@ export class Player {
         this.respawnTimer = 3;
 
         const dropCount = Math.floor(this.score / 8);
+        console.log(`someone died and spawned ${dropCount} orbs`);
         for (let i = 0; i < dropCount; ++i) {
             const t = i / dropCount;
             const index = Math.floor(t * (this.segmentPositions.length - 1));
@@ -114,7 +115,7 @@ export class Player {
 
     private tryRespawn(delta: number) {
         if (!this.alive && this.respawnTimer !== undefined) {
-            this.respawnTimer -= delta / 40;
+            this.respawnTimer -= delta / 20;
             if (this.respawnTimer <= 0) {
                 this.alive = true;
                 this.respawnTimer = undefined;
@@ -142,7 +143,7 @@ export class Player {
         }
 
         // normalized direction vector
-        const dir = this.input.mousePos;
+        const dir = this.input.dir;
 
         if (Math.abs(dir.x) > 1e-3 || Math.abs(dir.y) > 1e-3) {
             // Smooth turning

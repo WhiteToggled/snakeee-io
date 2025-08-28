@@ -1,12 +1,13 @@
 import { OrbState } from "../../shared/models/orb_state";
 import * as constants from "../../shared/models/constants";
+import { EventEmitter } from "stream";
 
 interface RespawnTimer {
     orb: OrbState;
     timer: number;
 }
 
-export class OrbManager {
+export class OrbManager extends EventEmitter {
     private orbs: OrbState[] = [];
     private respawnQueue: RespawnTimer[] = [];
     private nextId: number = 0;
@@ -20,6 +21,7 @@ export class OrbManager {
     }
 
     constructor() {
+        super();
         for (let i = 0; i < constants.TOTAL_ORBS; i++) {
             const orb = this.createOrb();
             this.orbs.push(orb);
@@ -30,11 +32,10 @@ export class OrbManager {
     }
 
     private createOrb(): OrbState {
-        const orbRadius = Math.floor(Math.random() * 6) + 6;
+        const orbRadius = Math.floor(Math.random() * 4) + 6;
         return {
             id: this.nextId++,
-            x: -9999,
-            y: -9999,
+            coords: [-9999, -9999],
             radius: orbRadius,
             active: false,
             color: Math.floor(Math.random() * 0xffffff),
@@ -51,8 +52,8 @@ export class OrbManager {
         for (let i = 0; i < count; i++) {
             const orb = this.orbs[i];
             const pos = this.getRandomPosition();
-            orb.x = pos.x;
-            orb.y = pos.y;
+            orb.coords[0] = pos.x;
+            orb.coords[1] = pos.y;
             orb.active = true;
         }
     }
@@ -69,24 +70,28 @@ export class OrbManager {
             if (idx !== -1) this.respawnQueue.splice(idx, 1);
         }
 
-        orb.x = x;
-        orb.y = y;
+        orb.coords[0] = x;
+        orb.coords[1] = y;
         orb.radius = radius;
         orb.active = true;
+        console.log(`Spawn: ${orb.coords[0]}, ${orb.coords[1]}\n`);
+        this.emit("orb_spawn", orb);
     }
 
 
     public killOrb(orb: OrbState) {
         orb.active = false;
         this.respawnQueue.push({ orb, timer: constants.RESPAWN_DELAY });
+        this.emit("orb_despawn", orb);
     }
 
 
     private respawnOrb(orb: OrbState) {
         const pos = this.getRandomPosition();
-        orb.x = pos.x;
-        orb.y = pos.y;
+        orb.coords[0] = pos.x;
+        orb.coords[1] = pos.y;
         orb.active = true;
+        this.emit("orb_spawn", orb);
     }
 
 

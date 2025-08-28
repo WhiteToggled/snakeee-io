@@ -2,47 +2,64 @@ import { Container } from "pixi.js";
 import { Orb } from "./Orb";
 import { OrbState } from "../../shared/models/orb_state";
 
-import { TOTAL_ORBS, INIT_CHUNK_SIZE, INIT_DELAY_MS } from "../../shared/models/constants";
+import { INIT_CHUNK_SIZE, INIT_DELAY_MS } from "../../shared/models/constants";
 
 export class OrbPool {
-    private orbs: Orb[] = [];
+    private orbs: Map<number, Orb> = new Map(); // key by orb ID
     public container: Container;
 
     constructor() {
         this.container = new Container();
     }
 
-    public async initializeAsync() {
-        for (let i = 0; i < TOTAL_ORBS; i += INIT_CHUNK_SIZE) {
-            const chunk = Math.min(INIT_CHUNK_SIZE, TOTAL_ORBS - i);
-            for (let j = 0; j < chunk; ++j) {
-                const orb = new Orb(0, 0, 5);
-                this.orbs.push(orb);
-                this.container.addChild(orb);
-            }
+    public spawnOrb(state: OrbState) {
+        if (this.orbs.has(state.id)) return; // already exists
 
+        const orb = new Orb(0, 0, 5); // initial radius, will override
+        orb.id = state.id;
+        orb.position.set(state.coords[0], state.coords[1]);
+        orb.setRadius(state.radius);
+        orb.active = state.active;
+        orb.visible = state.active;
+        orb.clear();
+        orb.circle(0, 0, state.radius).fill(state.color);
+
+        this.orbs.set(state.id, orb);
+        this.container.addChild(orb);
+    }
+
+    public despawnOrb(id: number) {
+        const orb = this.orbs.get(id);
+        if (!orb) return;
+
+        orb.kill();
+    }
+
+    public async spawnOrbsBatchAsync(orbStates: OrbState[]) {
+        for (let i = 0; i < orbStates.length; i += INIT_CHUNK_SIZE) {
+            const chunk = orbStates.slice(i, i + INIT_CHUNK_SIZE);
+            for (const state of chunk) {
+                this.spawnOrb(state);
+            }
             await new Promise((resolve) => setTimeout(resolve, INIT_DELAY_MS));
         }
     }
 
-    public updateFromServer(orbStates: OrbState[]) {
-        // create missing Orb graphics if needed
-        while (this.orbs.length < orbStates.length) {
-            const orb = new Orb(0, 0, 5); // initial radius will be overridden
-            this.orbs.push(orb);
-            this.container.addChild(orb);
-        }
+    public updateOrb(state: OrbState) {
+        const orb = this.orbs.get(state.id);
+        if (!orb) return;
 
-        // update all orbs to match server state
-        for (let i = 0; i < orbStates.length; i++) {
-            const state = orbStates[i];
-            const orb = this.orbs[i];
-            orb.position.set(state.x, state.y);
-            orb.setRadius(state.radius);
-            orb.active = state.active;
-            orb.visible = state.active;
-            orb.clear();
-            orb.circle(0, 0, 5).fill(state.color);
+        orb.position.set(state.coords[0], state.coords[1]);
+        orb.setRadius(state.radius);
+        orb.active = state.active;
+        orb.visible = state.active;
+        orb.clear();
+        orb.circle(0, 0, state.radius).fill(state.color);
+    }
+
+    public updateOrbs(states: OrbState[]) {
+        for (const state of states) {
+            this.updateOrb(state);
         }
     }
 

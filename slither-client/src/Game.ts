@@ -3,8 +3,8 @@ import { World } from "./World";
 import { Input } from "./Input";
 import { Player } from "./Player";
 import { Overlay } from "./Overlay";
-import { WorldState } from "../../shared/models/world_state";
 import { InputMessage, ServerToClientMessage } from "../../shared/types/messages";
+import { PlayerState } from "../../shared/models/player_state";
 
 export class Game {
     private app: Application;
@@ -35,7 +35,6 @@ export class Game {
         }
 
         this.world = new World();
-        await this.world.init();
         this.app.stage.addChild(this.world.container);
 
         this.overlay = new Overlay();
@@ -55,11 +54,11 @@ export class Game {
     }
 
 
-    private handleWorldUpdate(state: WorldState) {
-        this.world.updateFromServer(state);
+    private handleWorldUpdate(state: Record<string, PlayerState>) {
+        // this.world.updateFromServer(state);
 
         // update / spawn players
-        for (const [id, playerState] of Object.entries(state.players)) {
+        for (const [id, playerState] of Object.entries(state)) {
             let player = this.players.get(id);
             if (!player) {
                 player = new Player(id);
@@ -76,7 +75,7 @@ export class Game {
 
         // remove disconnected players
         for (const id of Array.from(this.players.keys())) {
-            if (!state.players[id]) {
+            if (!(id in state)) {
                 this.removePlayer(id);
             }
         }
@@ -126,7 +125,7 @@ export class Game {
 
                     case "world_update":
                         // this.currentWorldState = data.state;
-                        this.handleWorldUpdate(data.state);
+                        this.handleWorldUpdate(data.players);
                         break;
 
                     case "player_join":
@@ -135,6 +134,18 @@ export class Game {
 
                     case "player_leave":
                         this.removePlayer(data.playerId);
+                        break;
+
+                    case "orb_batch_spawn":
+                        this.world.spawnBatchOrbs(data.orbs);
+                        break;
+
+                    case "orb_spawn":
+                        this.world.spawnOrb(data.orb);
+                        break;
+
+                    case "orb_despawn":
+                        this.world.despawnOrb(data.orbId);
                         break;
                 }
             };
@@ -146,7 +157,7 @@ export class Game {
         if (!this.myId) return;
 
         const msg: InputMessage = {
-            mousePos: { x: input.dir.x, y: input.dir.y },
+            dir: { x: input.dir.x, y: input.dir.y },
             mouseDown: input.mouseDown,
         };
 
@@ -164,6 +175,9 @@ export class Game {
         // send inputs each frame
         this.sendInput(this.input);
 
+        for (const player of this.players.values()) {
+            player.updateSegments(delta);
+        }
         if (this.myId) {
             const me = this.players.get(this.myId);
             if (me) {

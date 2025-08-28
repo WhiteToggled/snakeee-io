@@ -7,6 +7,7 @@ export class Player {
     public sprite: Container;
 
     private segments: Graphics[] = [];
+    private segmentPositions: { x: number; y: number }[] = [];
 
     private color: number = 0xff00ff;
     public radius: number = 10;
@@ -30,7 +31,7 @@ export class Player {
 
     public updateFromServer(state: PlayerState) {
         // Apply server position and scale
-        this.sprite.position.set(state.position.x, state.position.y);
+        this.sprite.position.set(state.position[0], state.position[1]);
         this.radius = state.radius;
         this.scale = state.scale ?? 1;
         this.sprite.scale.set(this.scale);
@@ -43,33 +44,29 @@ export class Player {
             this.color = state.color;
         }
 
-        const desiredCount = state.segmentPositions.length;
-        while (this.segments.length < desiredCount) {
+        while (this.segments.length < state.segmentCount) {
             this.addSegment();
         }
-        while (this.segments.length > desiredCount) {
+        while (this.segments.length > state.segmentCount) {
             const removed = this.segments.pop();
             if (removed) this.sprite.removeChild(removed);
         }
 
-        for (let i = 0; i < this.segments.length; i++) {
-            const segPos = state.segmentPositions[i];
-            if (segPos) {
-                this.segments[i].position.set(
-                    segPos.x - state.position.x,
-                    segPos.y - state.position.y
-                );
+        // set head
+        this.segmentPositions[0] = { 
+            x: state.position[0], 
+            y: state.position[1] 
+        };
 
-                this.segments[i].clear();
-                this.segments[i]
-                    .circle(0, 0, constants.BASE_RADIUS)
-                    .fill(this.color)
-                    .stroke(0x000000);
-            }
-        }
     }
 
     private addSegment() {
+        const lastPos =
+            this.segmentPositions.length > 0
+                ? this.segmentPositions[this.segmentPositions.length - 1]
+                : this.position;
+        this.segmentPositions.push({ x: lastPos.x, y: lastPos.y });
+
         const seg = new Graphics()
             .circle(0, 0, constants.BASE_RADIUS)
             .fill(this.color)
@@ -77,5 +74,35 @@ export class Player {
 
         this.segments.push(seg);
         this.sprite.addChild(seg);
+    }
+
+    public updateSegments(_delta: number) {
+        for (let i = 1; i < this.segmentPositions.length; ++i) {
+            const prev = this.segmentPositions[i - 1];
+            const curr = this.segmentPositions[i];
+
+            const dx = prev.x - curr.x;
+            const dy = prev.y - curr.y;
+            const dist = Math.sqrt(dx * dx + dy * dy);
+
+            if (dist > constants.SEGMENT_SPACING) {
+                const t = constants.SEGMENT_SPACING / dist;
+                curr.x = prev.x - dx * t;
+                curr.y = prev.y - dy * t;
+            }
+
+            // update PIXI graphics for each segment
+            if (this.segments[i]) {
+                this.segments[i].position.set(
+                    curr.x - this.segmentPositions[0].x,
+                    curr.y - this.segmentPositions[0].y
+                );
+                this.segments[i].clear();
+                this.segments[i]
+                    .circle(0, 0, constants.BASE_RADIUS)
+                    .fill(this.color)
+                    .stroke(0x000000);
+            }
+        }
     }
 }
