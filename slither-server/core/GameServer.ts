@@ -2,6 +2,7 @@ import { WebSocketServer, WebSocket } from "ws";
 import { v4 as uuidv4 } from "uuid";
 import { Server } from "http";
 import { MongoClient } from "mongodb";
+// import zlib from "zlib";
 
 import { World } from "./World";
 import { Player } from "./Player";
@@ -33,7 +34,18 @@ export class GameServer {
     private tickInterval: NodeJS.Timeout;
 
     constructor(httpServer: Server) {
-        this.wss = new WebSocketServer({ server: httpServer });
+        this.wss = new WebSocketServer({
+            server: httpServer,
+            perMessageDeflate: {
+                zlibDeflateOptions: {
+                    level: 1, // compression max
+                },
+                zlibInflateOptions: {},
+                // limits memory usage
+                clientNoContextTakeover: true,
+                serverNoContextTakeover: true,
+            },
+        });
         this.world = new World();
 
         // MongoDB for Logs
@@ -67,6 +79,9 @@ export class GameServer {
     }
 
     private handleConnection(ws: WebSocket, req: any) {
+        // console.log("Client offered extensions:", req.headers["sec-websocket-extensions"]);
+        // console.log("Negotiated extensions:", ws.extensions);
+
         // create the new player
         const id = uuidv4();
         const player = new Player(id);
@@ -153,6 +168,16 @@ export class GameServer {
     }
 
     private broadcast(msg: ServerToClientMessage, excludeId?: string) {
+        // const raw = JSON.stringify(msg);
+        // const buf = Buffer.from(raw);
+        // console.log("Uncompressed:", buf.length);
+        //
+        // zlib.deflateRaw(buf, (err, compressed) => {
+        //     if (!err) {
+        //         console.log("Compressed size estimate:", compressed.length);
+        //     }
+        // });
+
         const payload = JSON.stringify(msg);
         for (const [id, socket] of Object.entries(this.sockets)) {
             if (excludeId && id === excludeId) continue;
