@@ -90,7 +90,7 @@ export class Player {
         this.respawnTimer = 3;
 
         const dropCount = Math.floor(this.score / 8);
-        console.log(`someone died and spawned ${dropCount} orbs`);
+        // console.log(`someone died and spawned ${dropCount} orbs`);
         for (let i = 0; i < dropCount; ++i) {
             const t = i / dropCount;
             const index = Math.floor(t * (this.segmentPositions.length - 1));

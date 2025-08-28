@@ -2,7 +2,7 @@ import { WebSocketServer, WebSocket } from "ws";
 import { v4 as uuidv4 } from "uuid";
 import { Server } from "http";
 // import { MongoClient } from "mongodb";
-import zlib from "zlib";
+// import zlib from "zlib";
 
 import { World } from "./World";
 import { Player } from "./Player";
@@ -48,13 +48,13 @@ export class GameServer {
             },
         });
         this.world = new World();
-        setInterval(() => {
-            console.log(
-                `[Traffic] Last minute - Uncompressed: ${this.totalUncompressedBytes} bytes, Compressed (deflateRaw): ${this.totalCompressedBytes} bytes`
-            );
-            this.totalUncompressedBytes = 0;
-            this.totalCompressedBytes = 0;
-        }, 60_000);
+        // setInterval(() => {
+        //     console.log(
+        //         `[Traffic] Last minute - Uncompressed: ${this.totalUncompressedBytes} bytes, Compressed (deflateRaw): ${this.totalCompressedBytes} bytes`
+        //     );
+        //     this.totalUncompressedBytes = 0;
+        //     this.totalCompressedBytes = 0;
+        // }, 60_000);
 
         // MongoDB for Logs
         // const uri = process.env.MONGO_URI!;
@@ -181,25 +181,25 @@ export class GameServer {
         this.broadcast(msg);
     }
 
-    private totalUncompressedBytes = 0;
-    private totalCompressedBytes = 0;
+    // private totalUncompressedBytes = 0;
+    // private totalCompressedBytes = 0;
     private broadcast(msg: ServerToClientMessage, excludeId?: string) {
-        const raw = JSON.stringify(msg);
-        const buf = Buffer.from(raw);
-        this.totalUncompressedBytes += buf.length;
-
-        zlib.deflateRaw(buf, (err, compressed) => {
-            if (!err && compressed) {
-                this.totalCompressedBytes += compressed.length;
-            }
-        });
+        // const raw = JSON.stringify(msg);
+        // const buf = Buffer.from(raw);
+        // this.totalUncompressedBytes += buf.length;
+        //
+        // zlib.deflateRaw(buf, (err, compressed) => {
+        //     if (!err && compressed) {
+        //         this.totalCompressedBytes += compressed.length;
+        //     }
+        // });
 
         const payload = JSON.stringify(msg);
         for (const [id, socket] of Object.entries(this.sockets)) {
             if (excludeId && id === excludeId) continue;
-            if (msg.type == "orb_spawn") {
-                console.log("Sending orb_spawn to", id);
-            }
+            // if (msg.type == "orb_spawn") {
+            //     console.log("Sending orb_spawn to", id);
+            // }
             if (socket.readyState === WebSocket.OPEN) {
                 socket.send(payload);
             }

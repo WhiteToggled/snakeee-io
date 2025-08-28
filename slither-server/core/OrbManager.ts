@@ -74,7 +74,7 @@ export class OrbManager extends EventEmitter {
         orb.coords[1] = y;
         orb.radius = radius;
         orb.active = true;
-        console.log(`Spawn: ${orb.coords[0]}, ${orb.coords[1]}\n`);
+        // console.log(`Spawn: ${orb.coords[0]}, ${orb.coords[1]}\n`);
         this.emit("orb_spawn", orb);
     }
 
